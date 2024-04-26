@@ -12,7 +12,7 @@ public class Client implements Runnable{
     private BufferedReader in;
     private PrintWriter out;
     private boolean done;
-    String inMessage;
+    
 
     @Override
     public void run(){
@@ -25,15 +25,15 @@ public class Client implements Runnable{
             Thread t = new Thread(inHandler);
             t.start();
 
-            
+            String inMessage;
             while ((inMessage = in.readLine()) != null){
 
                 System.out.println(inMessage);
 
             }
 
-        } catch (Exception e) {
-            // TODO: handle exception
+        } catch (IOException e) {
+            shutdown();
         }
 
     }
@@ -63,7 +63,7 @@ public class Client implements Runnable{
                             inReader.close();
                             shutdown();
                         } else {
-                            out.println(inMessage);
+                            out.println(message);
                         }
                     }
 
