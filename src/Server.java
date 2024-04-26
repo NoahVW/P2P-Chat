@@ -8,7 +8,8 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class Server implements Runnable{ 
+public class Server extends Thread{ 
+    
 
     private ArrayList<ConnectionHandler> connections;
     private ServerSocket server;
@@ -38,15 +39,20 @@ public class Server implements Runnable{
             shutdown();
         }
     }
-    public void broadcast(String message){
+
+   
+
+    public void broadcast(String message, String groupID){
         for(ConnectionHandler ch : connections) {
             if (ch != null) {
-
-                ch.sendMessage(message);
+                if(ch.getGroupID().equals((groupID))){
+                    ch.sendMessage(message);
+                }
             }
        } 
-
     }
+    
+        
      public void shutdown(){
         try {
             done = true;
@@ -59,7 +65,7 @@ public class Server implements Runnable{
                 ch.shutdown();
             }
         } catch (IOException e){
-            //igonre
+        
         }
     }
 
@@ -70,32 +76,38 @@ public class Server implements Runnable{
         private BufferedReader in;
         private PrintWriter out;
         private String nickname;
-        private String group;
+        private String groupID = "-1";
 
         public ConnectionHandler (Socket client) {
             this.client = client;
 
 
         }
+        public String getGroupID() {
+
+            while (groupID.equals("-1")) {}
+            return groupID;
+        }
+
             @Override
             public void run(){
                 try {
                     out = new PrintWriter(client.getOutputStream(), true);
                     in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+                    
+                    out.println("Please enter a Group Number: ");
+                    groupID = in.readLine();
                     out.println("Please enter a nickname: ");
                     nickname = in.readLine();
-                    out.println("Please enter a Group Name: ");
-                    group = in.readLine();
-                    
                 
-                    System.out.println(nickname + " connected to Group: " + group);
-                    broadcast(nickname + " joined the chat in group: " + group + "!");
+                    System.out.println(nickname + " connected to Group: " + groupID);
+                    broadcast(nickname + " joined the chat in group: " + groupID + "!", groupID);
                     String message;
                     while ((message = in.readLine()) != null) {
                         if (message.startsWith("/nickname")){
                             String[] messageSplit = message.split(" ", 2);
                             if (messageSplit.length == 2) {
-                                broadcast(nickname + " renamed themselves to " + messageSplit[1]);
+                                broadcast(nickname + " renamed themselves to " + messageSplit[1], groupID);
                                 System.out.println(nickname + " renamed themselves to " + messageSplit[1]);
                                 nickname = messageSplit[1];
                                 out.println("Successfully changed nickname to " + nickname);
@@ -104,11 +116,15 @@ public class Server implements Runnable{
                                 out.println("No Nickname Provided!");
                             }
                         } else if (message.startsWith("/quit")) {
-                            broadcast(nickname + " left the chat!");
+                            
+                            broadcast(nickname + " left the chat!", groupID);
                             shutdown();
                         
                         } else {
-                            broadcast(group + ":  %n" + nickname + ": " + message);
+                            if (getGroupID().equals(groupID)) {
+                                broadcast(nickname + ": " + message, groupID);
+
+                            }    //"Group " + groupID + ": " + nickname + ": " + message
                         }
 
                     }
