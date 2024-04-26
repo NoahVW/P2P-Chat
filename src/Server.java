@@ -70,6 +70,7 @@ public class Server implements Runnable{
         private BufferedReader in;
         private PrintWriter out;
         private String nickname;
+        private String group;
 
         public ConnectionHandler (Socket client) {
             this.client = client;
@@ -83,12 +84,15 @@ public class Server implements Runnable{
                     in = new BufferedReader(new InputStreamReader(client.getInputStream()));
                     out.println("Please enter a nickname: ");
                     nickname = in.readLine();
+                    out.println("Please enter a Group Name: ");
+                    group = in.readLine();
                     
-                    System.out.println(nickname + " connected!");
-                    broadcast(nickname + " joined the chat!");
+                
+                    System.out.println(nickname + " connected to Group: " + group);
+                    broadcast(nickname + " joined the chat in group: " + group + "!");
                     String message;
                     while ((message = in.readLine()) != null) {
-                        if (message.startsWith("/nick")){
+                        if (message.startsWith("/nickname")){
                             String[] messageSplit = message.split(" ", 2);
                             if (messageSplit.length == 2) {
                                 broadcast(nickname + " renamed themselves to " + messageSplit[1]);
@@ -104,7 +108,7 @@ public class Server implements Runnable{
                             shutdown();
                         
                         } else {
-                            broadcast(nickname + ": " + message);
+                            broadcast(group + ":  %n" + nickname + ": " + message);
                         }
 
                     }
